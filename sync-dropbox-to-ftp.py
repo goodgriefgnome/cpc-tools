@@ -17,6 +17,7 @@
 }
 """
 
+import argparse
 import contextlib
 import ftplib
 import json
@@ -74,7 +75,13 @@ def Ftp(host, user, passwd):
 
 
 if __name__ == '__main__':
-  with open('etc.json') as f:
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--conf", default="~/.sync-dropbox-to-ftp.conf")
+  parser.add_argument("--noupdate", action="store_true", default=False,
+                      help="Do not update the configuration file.")
+  args = parser.parse_args()
+  conf_file = os.path.expanduser(args.conf)
+  with open(conf_file) as f:
     conf = json.load(f)
   options = conf['options']
   state = conf['state']
@@ -93,5 +100,6 @@ if __name__ == '__main__':
                  callback=display)
       print()
 
-  with open('etc.json', 'w') as f:
-    json.dump(conf, f, indent=2)
+  if not args.noupdate:
+    with open(conf_file, 'w') as f:
+      json.dump(conf, f, indent=2)
