@@ -22,6 +22,7 @@ import contextlib
 import ftplib
 import json
 import os.path
+import sys
 import urllib.parse
 import urllib.request
 
@@ -92,13 +93,14 @@ if __name__ == '__main__':
   with Ftp(**options['ftp']['auth']) as ftp:
     for path in added_files:
       def display(num_bytes):
-        print('\rUploading {} via FTP: {} bytes...'.format(path, num_bytes), end='', flush=True)
+        print('{}: Uploaded {} bytes...'.format(path, num_bytes),
+              end='\r', file=sys.stderr, flush=True)
       display(0)
 
       ftp.upload(os.path.join(options['ftp']['path'], os.path.basename(path)),
                  db.get_file(path),
                  callback=display)
-      print()
+      print(path)
 
   if not args.noupdate:
     with open(conf_file, 'w') as f:
