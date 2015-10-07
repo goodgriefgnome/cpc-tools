@@ -3,7 +3,7 @@
 """The initial options file should look like:
 
 {
-  "state": { "cursor": null },
+  "state": { "cursor": null, "left": [] },
   "options": {
     "ftp": {
       "auth": { "host": "FTP_HOST", "user": "FTP_USER", "passwd": "FTP_PASSWORD" },
@@ -88,19 +88,26 @@ if __name__ == '__main__':
   state = conf['state']
 
   db = Dropbox(**options['dropbox']['auth'])
-  added_files, state['cursor'] = db.get_added_files(options['dropbox']['path'], state['cursor'])
+  left, state['left'] = state['left'], []
+  if not left:
+    left, state['cursor'] = db.get_added_files(options['dropbox']['path'], state['cursor'])
 
   with Ftp(**options['ftp']['auth']) as ftp:
-    for path in added_files:
-      def display(num_bytes):
-        print('{}: Uploaded {} bytes...'.format(path, num_bytes),
-              end='\r', file=sys.stderr, flush=True)
-      display(0)
+    for path in left:
+      try:
+        def display(num_bytes):
+          print('{}: Uploaded {} bytes...'.format(path, num_bytes), end='\r', file=sys.stderr, flush=True)
+        display(0)
 
-      ftp.upload(os.path.join(options['ftp']['path'], os.path.basename(path)),
-                 db.get_file(path),
-                 callback=display)
-      print(path)
+        ftp.upload(os.path.join(options['ftp']['path'], os.path.basename(path)),
+                   db.get_file(path),
+                   callback=display)
+      except Exception as e:
+        print('\n{}: Failed with {}'.format(path, e), file=sys.stderr, flush=True)
+        state['left'].append(path)
+      else:
+        print('\n{}: Done'.format(path), file=sys.stderr, flush=True)
+        print(path, flush=True)
 
   if not args.noupdate:
     with open(conf_file, 'w') as f:
