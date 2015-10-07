@@ -70,7 +70,7 @@ def Ftp(host, user, passwd):
         def cb(buff):
           num_bytes[0] += len(buff)
           callback(num_bytes[0])
-        self._ftp.storbinary('STOR ' + os.path.join(self._ftp.pwd(), path), f, callback=cb)
+        self._ftp.storbinary('STOR ' + os.path.join(self._ftp.pwd(), path), f, blocksize=1024*1024, callback=cb)
         
     yield Actions(ftp)
 
