@@ -48,7 +48,7 @@ class Dropbox:
       deltas = json.loads(
         self._urlopen(url='https://api.dropbox.com/1/delta', data=data)
         .read().decode())
-      added_files = [entry[0] for entry in deltas['entries'] if entry[1]]
+      added_files = [entry[0] for entry in deltas['entries'] if entry[1] and not entry[1]['is_dir']]
       cursor = deltas['cursor']
     return added_files, cursor
 
